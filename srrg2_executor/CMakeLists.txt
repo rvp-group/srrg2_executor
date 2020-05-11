@@ -7,10 +7,6 @@ find_package(catkin REQUIRED COMPONENTS
   srrg2_core_ros
   srrg2_qgl_viewport
   srrg2_qgl_viewport_ros
-  srrg2_laser_slam_2d
-  srrg2_slam_interfaces
-  srrg2_solver
-  srrg2_proslam
 )
 
 include(${srrg_cmake_modules_INCLUDE_DIRS}/CMakeCompileOptions.txt)
@@ -30,25 +26,23 @@ catkin_package(
 #  INCLUDE_DIRS no_include_dirs
 #  LIBRARIES no_srrg2_executor_library
 
-  CATKIN_DEPENDS
+ CATKIN_DEPENDS
     srrg2_core
     srrg2_core_ros
     srrg2_qgl_viewport
     srrg2_qgl_viewport_ros
-    srrg2_laser_slam_2d
-    srrg2_slam_interfaces
-    srrg2_solver
-    srrg2_proslam
-
-  DEPENDS
+    
+DEPENDS
     OpenCV
     SRRG_QT
+    #QGLViewer
 )
 
 
 include_directories(
   ${EIGEN3_INCLUDE_DIR}
   ${OpenCV_INCLUDE_DIRS}
+  #${QGLVIEWER_INCLUDE_DIR}
   ${SRRG_QT_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
   )
@@ -62,9 +56,11 @@ target_link_libraries(srrg2_shell
   ${GLUT_LIBRARIES}
   ${catkin_LIBRARIES})
 
-add_executable(srrg2_dynamic_shell src/apps/srrg2_dynamic_shell.cpp)
-target_link_libraries(srrg2_dynamic_shell
-  ${QGLViewer_LIBRARIES}
-  ${SRRG_QT_LIBRARIES}
-  ${GLUT_LIBRARIES}
+set(CATKIN_DEVEL "${CATKIN_DEVEL_PREFIX}/../")
+
+add_definitions(-DDEVEL_SPACE="${CATKIN_DEVEL}")
+
+add_executable(auto_dl_finder src/apps/auto_dl_finder.cpp)
+target_link_libraries(auto_dl_finder
   ${catkin_LIBRARIES})
+

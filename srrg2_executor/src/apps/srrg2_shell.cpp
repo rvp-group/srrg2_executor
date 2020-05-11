@@ -1,27 +1,14 @@
+#include <dlfcn.h>
+#include <stdlib.h>
+#include <gnu/lib-names.h>
+#include <thread>
 #include <srrg_boss/json_object_writer.h>
 #include <srrg_config/configurable_manager.h>
 #include <srrg_config/configurable_visual_shell.h>
 #include <srrg_config/linenoise.h>
 #include <srrg_system_utils/parse_command_line.h>
 #include <srrg_system_utils/system_utils.h>
-
-// ia basic instances
-#include <srrg_messages/instances.h>
-#include <srrg_messages_ros/instances.h>
-#include <srrg_pcl/instances.h>
-#include <srrg_slam_interfaces/instances.h>
-
-// ia solver instances
-#include <srrg_solver/variables_and_factors/types_2d/instances.h>
-#include <srrg_solver/variables_and_factors/types_3d/instances.h>
-//#include <srrg_solver/calib/instances.h>
-//#include <srrg_solver/linear_solvers/instances.h>
-#include <srrg_solver/solver_core/instances.h>
-
-// ia full systems instances
-#include <srrg2_proslam_tracking/instances.h>
-#include <srrg_laser_slam_2d/instances.h>
-//#include <srrg_shaslam_system/instances.h>
+#include <srrg_system_utils/profiler.h>
 
 // viewer
 #include <srrg_qgl_viewport/viewer_core_shared_qgl.h>
@@ -36,29 +23,13 @@ using namespace srrg2_core;
 using namespace std;
 
 // ia logging
-const std::string app_name("srrg2_shell_app");
+const std::string app_name("srrg2_shell");
 #define LOG std::cerr << app_name + "|"
-
-void registerAllInstances() {
-  srrg2_core::point_cloud_registerTypes();
-  srrg2_core::messages_registerTypes();
-  srrg2_core_ros::messages_ros_registerTypes();
-  srrg2_solver::solver_registerTypes();
-  srrg2_solver::registerTypes2D();
-  srrg2_solver::registerTypes3D();
-  //srrg2_solver::calib_registerTypes();
-  srrg2_laser_tracker_2d::laser_tracker_2d_registerTypes();
-  srrg2_slam_interfaces::slam_interfaces_registerTypes();
-  srrg2_proslam::srrg2_proslam_tracking_registerTypes();
-  //srrg2_shaslam::srrg2_shaslam_registerTypes();
-  //  srrg2_slam_architecture::slam_architecture_multi_graph_sm_registerTypes();
-}
 
 const char* banner[] = {"dynamic executor", 0};
 
 int main(int argc, char** argv) {
   srrgInit(argc, argv, "shell");
-  registerAllInstances();
   Profiler::enable_logging = true;
 
   ParseCommandLine cmd_line(argv, banner);
@@ -75,9 +46,19 @@ int main(int argc, char** argv) {
     "to increse this number [default is 50MB]",
     BUFFER_SIZE_50MEGABYTE);
   ArgumentString conf_file(&cmd_line, "c", "config-file", "config file to load on start", "");
+  ArgumentString dl_stub_file(&cmd_line, "dlc", "dl-config", "stub where to read/write the stub", "");
   cmd_line.parse();
   const std::string exe_name = argv[0];
 
+  if (dl_stub_file.isSet()) {
+    ifstream is(dl_stub_file.value());
+    if (is.good()) {
+      ConfigurableManager::initFactory(dl_stub_file.value());
+    } else {
+      ConfigurableManager::makeFactoryStub(dl_stub_file.value());
+    }
+  }
+  ConfigurableManager manager;
   StringVector commands;
   if (conf_file.isSet()) {
     std::string open_command = std::string("open ") + conf_file.value();
@@ -131,7 +112,7 @@ int main(int argc, char** argv) {
   }
 
   // ds allocate a shell with visualization support
-  ConfigurableVisualShell shell;
+  ConfigurableVisualShell shell(manager);
   if (viewer_core) {
     shell.viewer_core = viewer_core;
     viewer_core->stop();

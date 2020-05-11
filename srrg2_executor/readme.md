@@ -1,6 +1,6 @@
 # Package `srrg2_executor`
 
-Interactive shell to run and modify configurations on the fly. Viewer can be attached (both locally - in shared mode - and remotely - in ROS mode). Dependencies: the complete `srrg2` suite (for now). Dynamic types loading is coming soon.
+Interactive shell to run and modify configurations on the fly. Viewer can be attached (both locally - in shared mode - and remotely - in ROS mode). Dependencies: [srrg2_core](https://github.com/srrg-sapienza/srrg2_core.git) and [srrg2_qgl_viewport](https://github.com/srrg-sapienza/srrg2_qgl_viewport.git). All the other package libraries are loaded dynamically.
 
 ## How to build
 The `srrg2_executor` is developed using our `srrg2` framework.
@@ -12,14 +12,9 @@ Please follow this guide to build and run `srrg2_executor` on your machine:
 2. clone all the `srrg2` dependencies of this package
 ```bash
 cd <SRRG2_SOURCE_ROOT>
-git clone https://gitlab.com/srrg-software/srrg_hbst.git # VPR library (to compute loop closures in Visual-SLAM pipelines)
 git clone https://github.com/srrg-sapienza/srrg2_cmake_modules.git # basic cmake-modules
 git clone https://github.com/srrg-sapienza/srrg2_core.git # core data-structures and
-git clone https://github.com/srrg-sapienza/srrg2_solver.git # solver (both for registration and global optimization)
 git clone https://github.com/srrg-sapienza/srrg2_qgl_viewport.git # viewport
-git clone https://github.com/srrg-sapienza/srrg2_slam_interfaces.git # SLAM interfaces
-git clone https://github.com/srrg-sapienza/srrg2_laser_slam_2d.git # 2D-LiDAR pipeline
-git clone https://github.com/srrg-sapienza/srrg2_proslam.git # v-SLAM pipeline
 ```
 
 3. clone this repository
@@ -35,12 +30,8 @@ ln -s <SRRG2_SOURCE_ROOT>/srrg2_cmake_modules .
 ln -s <SRRG2_SOURCE_ROOT>/srrg_hbst/ .
 ln -s <SRRG2_SOURCE_ROOT>/srrg2_core/srrg2_core .
 ln -s <SRRG2_SOURCE_ROOT>/srrg2_core/srrg2_core_ros .
-ln -s <SRRG2_SOURCE_ROOT>/srrg2_solver/srrg2_solver .
 ln -s <SRRG2_SOURCE_ROOT>/srrg2_qgl_viewport/srrg2_qgl_viewport .
 ln -s <SRRG2_SOURCE_ROOT>/srrg2_qgl_viewport/srrg2_qgl_viewport_ros .
-ln -s <SRRG2_SOURCE_ROOT>/srrg2_slam_interfaces/srrg2_slam_interfaces .
-ln -s <SRRG2_SOURCE_ROOT>/srrg2_laser_slam_2d/srrg2_laser_slam_2d .
-ln -s <SRRG2_SOURCE_ROOT>/srrg2_proslam/srrg2_proslam .
 ln -s <SRRG2_SOURCE_ROOT>/srrg2_executor/srrg2_executor .
 ```
 
@@ -57,7 +48,8 @@ catkin build --catkin-make-args tests
 ```
 
 ## How to run
-The executor has just one executable - the `srrg2_shell`. You can either load, modify and run your configuration - using the option `-c` - or generate one on the fly and then run it. For more details run:
+This package offers 2 executable: `auto_dl_finder` and `srrg2_shell`. The former reads the catkin `devel` dir created after the build step and generates a file with all the `srrg2` dynamic libraries. This is then passed as **mandatory** argument to `srrg2_shell`, to load at runtimes all the libraries required to run a specific pipelines.
+Through `srrg2_shell` you can either load, modify and run your configuration - using the option `-c` - or generate one on the fly and then run it. For more details run:
 ```sh
 source <SRRG2_WS_ROOT>/devel/setup.bash
 rosrun srrg2_executor srrg2_shell -h
@@ -65,10 +57,18 @@ rosrun srrg2_executor srrg2_shell -h
 
 Warning: to execute the shell you to have the `roscore` active in your system.
 
-###### Example
-1. Run the `srrg2_shell` application
+###### Example: how to run a pipeline configuration from `srrg2_executor`
+In this case, we assume to have a pipeline configuration - e.g. [srrg2_proslam](https://github.com/srrg-sapienza/srrg2_proslam.git) - named `config_proslam.json`.
+
+1. Run the `auto_dl_finder` and collect all `srrg2` dynamic libraries into a file. If you already have this file, this step might not be necessary.
 ```bash
 source <SRRG2_WS_ROOT>/devel/setup.bash
+rosrun srrg2_executor auto_dl_finder -dlc srrg2_dynamic_libraries.txt # srrg2_dynamic_libraries.txt is the output file
+```
+![executor-auto-dl-finder-step](../screenshots/executor-auto-dl-finder.png)
+
+1. Run the `srrg2_shell` application
+```bash
 rosrun srrg2_executor srrg2_shell -c <path>/<to>/<a>/<configuration>/<file> -vt shared
 ```
 

@@ -14,8 +14,5 @@
   <depend>srrg2_core_ros</depend>
   <depend>srrg2_qgl_viewport</depend>
   <depend>srrg2_qgl_viewport_ros</depend>
-  <depend>srrg2_laser_slam_2d</depend>
-  <depend>srrg2_slam_interfaces</depend>
-  <depend>srrg2_solver</depend>
-  <depend>srrg2_proslam</depend>
+
 </package>
